@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOID TRILLION BANK - 10 DIGITS</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Inter,system-ui,sans-serif}
+body{background:#f2f2f7}.app{max-width:430px;margin:0 auto;min-height:100vh;background:#f2f2f7}
+.screen{display:none}.screen.active{display:block}
+.center{padding:20px}.inp{width:100%;padding:16px 18px;background:#fff;border:1px solid #e5e5ea;border-radius:14px;margin:7px 0;font-size:15px}
+.btn{width:100%;padding:17px;background:#000;color:#fff;border:none;border-radius:14px;font-weight:700;font-size:16px;margin-top:10px;cursor:pointer}
+.btn2{background:#fff;color:#000;border:1px solid #ddd}
+.topbar{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:10px}
+.card{background:#001a4d;border-radius:16px;padding:18px;color:#fff;margin:12px}
+.bal{font-size:28px;font-weight:800;margin-top:14px}
+.act{flex:1;background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #e5e5ea;cursor:pointer}
+.actions{display:flex;gap:12px;padding:0 12px}
+.history{background:#fff;margin:12px;border-radius:16px;padding:14px}
+.tx{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #f2f2f7}
+.receipt{position:fixed;inset:0;background:#f5f5f5;z-index:999;overflow:auto;display:none}
+.receipt.show{display:block}
+.r-head{background:#fff;padding:50px 20px 20px;text-align:center}
+.check{width:60px;height:60px;background:#00c853;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:30px;margin:0 auto 14px}
+.r-box{background:#fff;border-radius:12px;margin:12px;padding:0 16px}
+.r-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid #f2f2f7;font-size:13px}
+.r-row span:first-child{color:#8e8e93}
+.r-btn{background:#00c853;color:#fff;padding:16px;border-radius:28px;text-align:center;font-weight:700;margin:20px 16px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="app">
+<div id="auth" class="screen active">
+<div style="padding:32px 24px 10px"><h1 style="font-size:32px;font-weight:900;line-height:1">VOID<br><span style="color:#3d5afe">TRILLION</span><br>BANK</h1><p style="font-size:12px;color:#888;margin-top:8px">10-digit account • User A → User B works</p><p id="err" style="color:red;font-size:12px;margin-top:10px"></p></div>
+<div class="center">
+<input id="fn" class="inp" placeholder="First Name"><input id="sn" class="inp" placeholder="Surname"><input id="mn" class="inp" placeholder="Middle Name"><input id="em" class="inp" placeholder="Email"><input id="acct" class="inp" placeholder="10-digit Account (e.g 8030849634)" maxlength="10" inputmode="numeric"><input id="pw" class="inp" type="password" placeholder="Password">
+<button class="btn" onclick="signup()">Create Account — Get ₦1T</button>
+<button class="btn btn2" onclick="document.getElementById('loginBox').style.display='block'">Already have account? Login</button>
+<div id="loginBox" style="display:none;margin-top:16px"><input id="logEm" class="inp" placeholder="Email"><input id="logPw" class="inp" type="password" placeholder="Password"><button class="btn" onclick="login()">Login</button></div>
+<div style="margin-top:20px;background:#fff;padding:12px;border-radius:12px;font-size:11px"><b>Accounts on this phone:</b> <span id="allAccts">Loading...</span><br><br><button class="btn btn2" style="padding:10px;font-size:12px" onclick="if(confirm('Clear ALL?')){localStorage.clear();location.reload()}">Clear All (If button fails)</button></div>
+</div>
+</div>
+<div id="dash" class="screen">
+<div class="topbar"><div style="width:36px;height:36px;border-radius:50%;background:#ff3b30;display:grid;place-items:center;color:#fff;font-weight:700" id="av">V</div><b>Hi, <span id="hiName"></span></b><span style="margin-left:auto" onclick="logout()">Logout</span></div>
+<div class="card"><div style="display:flex;justify-content:space-between;font-size:12px"><span id="dashAcct"></span><span onclick="copyAcct()">📋</span></div><div class="bal" id="bal"></div><div style="font-size:11px;opacity:.6;margin-top:6px">Last updated just now</div></div>
+<div class="actions"><div class="act" onclick="openTransfer()"><div>↑</div><b>Transfer</b></div><div class="act"><b>History</b></div></div>
+<div class="history" id="hist"></div>
+</div>
+<div id="transfer" class="screen">
+<div class="topbar"><span onclick="openDash()">← Back</span><b style="margin-left:10px">Transfer</b></div>
+<div class="center"><div id="found" style="font-size:13px;margin-bottom:8px;font-weight:600"></div><input id="toAcct" class="inp" placeholder="Receiver 10-digit Account" maxlength="10" inputmode="numeric" oninput="findUser()"><input id="toAmt" class="inp" type="number" placeholder="Amount"><input id="toPin" class="inp" type="password" placeholder="Your Password"><button class="btn" onclick="doTransfer()">Send to User</button></div>
+</div>
+<div id="receipt" class="receipt">
+<div class="r-head"><div class="check">✓</div><div style="color:#00a85a;font-size:14px">Transfer to <span id="rName"></span></div><div style="font-size:32px;font-weight:800;margin:6px 0" id="rAmt"></div><div style="color:#00a85a;font-weight:600">Successful</div></div>
+<div style="color:#8e8e93;font-size:12px;padding:16px 16px 0">The recipient may be notified via email or SMS from 311.</div>
+<div class="r-box"><div class="r-row"><span>Transaction No.</span><span id="rTxn"></span></div><div class="r-row"><span>Payment Method</span><span>OWealth</span></div><div class="r-row"><span>Transaction Date</span><span id="rDate"></span></div></div>
+<div class="r-box"><div style="padding:16px 0 0;font-size:12px;color:#8e8e93">Recipient Details</div><div class="r-row"><span id="rRecName" style="color:#000"></span></div><div class="r-row"><span id="rRecAcct"></span></div></div>
+<div class="r-box"><div class="r-row"><span>Category</span><span>Transfer</span></div></div>
+<div class="r-btn" onclick="closeReceipt()">Close Receipt</div>
+</div>
+</div>
+<script>
+let DB; try{DB=JSON.parse(localStorage.getItem('VOIDDB_V4')||'{"users":[]}')}catch{DB={users:[]}}
+let CUR; try{CUR=JSON.parse(localStorage.getItem('VOIDCUR_V4')||'null')}catch{CUR=null}
+const save=()=>{localStorage.setItem('VOIDDB_V4',JSON.stringify(DB));localStorage.setItem('VOIDCUR_V4',JSON.stringify(CUR));showAll()}
+const showAll=()=>{document.getElementById('allAccts').innerText=DB.users.length?DB.users.map(u=>u.accountNumber+'-'+u.fullName.split(' ')[0]).join(', '):'No accounts yet'}
+showAll();
+function signup(){
+ const err=document.getElementById('err'); err.innerText='';
+ const f=fn.value.trim(), s=sn.value.trim(), m=mn.value.trim(), e=em.value.trim().toLowerCase(), a=acct.value.trim(), p=pw.value;
+ if(!f||!s||!m||!e||!a||!p){err.innerText='Fill ALL fields'; return alert('Fill all fields');}
+ if(a.length!==10 || isNaN(a)){err.innerText='Must be 10 digits'; return alert('Account must be exactly 10 digits. Example: 8030849634');}
+ if(DB.users.find(u=>u.accountNumber===a)){err.innerText='Account taken'; return alert('That 10-digit number taken. Try another');}
+ if(DB.users.find(u=>u.email===e)){err.innerText='Email taken'; return alert('Email exists, login or use another');}
+ const full=`${s} ${f} ${m}`.toUpperCase();
+ const user={firstName:f,surname:s,middleName:m,fullName:full,email:e,accountNumber:a,password:p,balance:1000000000000,tx:[{desc:'Welcome Bonus - ₦1 Trillion',amount:1000000000000,type:'credit',time:new Date().toLocaleString()}]};
+ DB.users.push(user); CUR=user; save(); alert('SUCCESS! '+a+' created with ₦1T'); openDash();
+}
+function login(){const u=DB.users.find(u=>u.email===logEm.value.trim().toLowerCase() && u.password===logPw.value); if(!u){alert('Wrong email or password'); return;} CUR=u; save(); openDash();}
+function openDash(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('dash').classList.add('active'); document.getElementById('hiName').innerText=CUR.firstName; document.getElementById('av').innerText=CUR.firstName[0]; document.getElementById('dashAcct').innerText=`${CUR.accountNumber} | ${CUR.fullName}`; document.getElementById('bal').innerText=`₦ ${Number(CUR.balance).toLocaleString()}.00`; document.getElementById('hist').innerHTML=`<b>Transactions</b>`+CUR.tx.map(t=>`<div class="tx"><div><b>${t.desc}</b><br><span style="font-size:11px;color:#888">${t.time}</span></div><b style="color:${t.type==='credit'?'#00a85a':'#000'}">${t.type==='credit'?'+':'-'}₦${Number(t.amount).toLocaleString()}</b></div>`).join('');}
+function findUser(){const info=document.getElementById('found'); if(toAcct.value.length!==10){info.innerText=''; return;} if(toAcct.value===CUR.accountNumber){info.innerText='❌ Cannot send to yourself'; info.style.color='red'; return;} const u=DB.users.find(u=>u.accountNumber===toAcct.value); if(u){info.innerText=`✓ Found: ${u.fullName} — You can send`; info.style.color='#00a85a';} else {info.innerText='❌ Not found on this phone. Create it first.'; info.style.color='red';}}
+function doTransfer(){if(toAcct.value.length!==10){alert('Receiver must be 10 digits'); return;} if(toAcct.value===CUR.accountNumber){alert('Cannot send to self'); return;} const to=DB.users.find(u=>u.accountNumber===toAcct.value); if(!to){alert('Account not found. Create that account first'); return;} if(CUR.password!==toPin.value){alert('Wrong password'); return;} const amt=Number(toAmt.value); if(!amt){alert('Enter amount'); return;} if(CUR.balance<amt){alert('Insufficient'); return;} CUR.balance-=amt; to.balance+=amt; const time=new Date().toLocaleString(); CUR.tx.unshift({desc:`Transfer to ${to.fullName}`,amount:amt,type:'debit',time:time}); to.tx.unshift({desc:`Transfer from ${CUR.fullName}`,amount:amt,type:'credit',time:time}); DB.users=DB.users.map(u=>{if(u.accountNumber===CUR.accountNumber) return CUR; if(u.accountNumber===to.accountNumber) return to; return u;}); save(); document.getElementById('rName').innerText=to.fullName; document.getElementById('rAmt').innerText=`₦ ${amt.toLocaleString()}.00`; document.getElementById('rTxn').innerText='0100'+Math.floor(Math.random()*1e20)+'373061'; document.getElementById('rDate').innerText=time; document.getElementById('rRecName').innerText=to.fullName; document.getElementById('rRecAcct').innerText=`${to.accountNumber} | OWealth`; document.getElementById('receipt').classList.add('show');}
+function closeReceipt(){document.getElementById('receipt').classList.remove('show'); openDash();}
+function openTransfer(){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('transfer').classList.add('active'); document.getElementById('found').innerText='';}
+function copyAcct(){navigator.clipboard.writeText(CUR.accountNumber); alert('Copied: '+CUR.accountNumber);}
+function logout(){localStorage.removeItem('VOIDCUR_V4'); location.reload();}
+if(location.search.includes('clear')){localStorage.clear(); alert('Cleared!'); location.href=location.pathname}
+if(CUR) openDash();
+</script>
+</body>
+</html>
