@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>VOID BANK - 10 DIGITS GLOBAL</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Inter',sans-serif}
+body{background:#f2f2f7}.app{max-width:420px;margin:0 auto;min-height:100vh;background:#f2f2f7;position:relative}
+.screen{display:none}.screen.active{display:block}.center{padding:24px}
+.inp{width:100%;padding:16px;background:#fff;border:1px solid #ddd;border-radius:14px;margin:7px 0}
+.btn{width:100%;padding:17px;background:#000;color:#fff;border:none;border-radius:14px;font-weight:700;margin-top:12px}
+.topbar{background:#fff;padding:14px 16px;display:flex;align-items:center;gap:12px}
+.card-dark{background:#001a4d;border-radius:16px;padding:18px;color:#fff;margin:12px}
+.bal{font-size:28px;font-weight:800}.act{flex:1;background:#fff;border-radius:14px;padding:14px;text-align:center;border:1px solid #ddd}
+.actions{display:flex;gap:12px;padding:0 12px}.history{background:#fff;margin:12px;border-radius:16px;padding:12px}
+.receipt-wrap{position:fixed;inset:0;background:#f5f5f5;z-index:99;display:none}.receipt-wrap.show{display:block}
+.receipt-header{background:#fff;padding:40px 20px;text-align:center}
+.check{width:56px;height:56px;background:#00c853;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:28px;margin:0 auto 16px}
+.r-box{background:#fff;border-radius:12px;margin:12px;padding:0 16px}.r-row{display:flex;justify-content:space-between;padding:16px 0;border-bottom:1px solid #eee;font-size:13px}
+.r-green-btn{background:#00c853;color:#fff;padding:16px;border-radius:28px;text-align:center;font-weight:700;margin:20px 16px}
+</style></head><body>
+<div class="app">
+<div id="s-auth" class="screen active"><div style="padding:32px 24px"><h1>VOID<br><span style="color:#3d5afe">TRILLION</span> BANK</h1><p style="font-size:12px;color:#888">10-digit account • ₦1 Trillion bonus</p></div>
+<div class="center">
+<input id="fn" class="inp" placeholder="First Name"><input id="sn" class="inp" placeholder="Surname"><input id="mn" class="inp" placeholder="Middle Name">
+<input id="em" class="inp" placeholder="Email">
+<input id="acctIn" class="inp" placeholder="Choose 10-digit Account Number" maxlength="10" inputmode="numeric">
+<input id="pw" class="inp" type="password" placeholder="Password">
+<button class="btn" onclick="signup()">Create Account</button>
+<button class="btn" style="background:#fff;color:#000;border:1px solid #ddd" onclick="loginBox.style.display='block'">Login</button>
+<div id="loginBox" style="display:none;margin-top:20px"><input id="logEm" class="inp" placeholder="Email"><input id="logPw" class="inp" type="password" placeholder="Password"><button class="btn" onclick="login()">Login</button></div>
+</div></div>
+
+<div id="s-dash" class="screen"><div class="topbar"><div style="width:36px;height:36px;border-radius:50%;background:#ff3b30;display:grid;place-items:center;color:#fff;font-weight:700" id="av">I</div><b>Hi, <span id="hiName"></span></b></div>
+<div class="card-dark"><div style="display:flex;justify-content:space-between;font-size:12px"><span id="dashAcct"></span><span onclick="copyAcct()">📋</span></div><div class="bal" id="bal" style="margin:18px 0 6px"></div><div style="font-size:11px;opacity:.6">Last updated just now</div></div>
+<div class="actions"><div class="act" onclick="openTransfer()">↑<br><b>Transfer</b></div><div class="act"><b>History</b></div></div>
+<div class="history" id="histBox"></div>
+<div style="padding:12px"><button class="btn" style="background:#fff;color:#000;border:1px solid #ddd" onclick="logout()">Logout</button></div></div>
+
+<div id="s-transfer" class="screen"><div class="topbar"><span onclick="backDash()">←</span><b style="margin-left:12px">Transfer</b></div>
+<div class="center"><div id="searchInfo" style="font-size:13px;margin-bottom:8px"></div>
+<input id="toAcct" class="inp" placeholder="Receiver 10-digit Account" maxlength="10" oninput="findUser()">
+<input id="toAmt" class="inp" type="number" placeholder="Amount"><input id="toPin" class="inp" type="password" placeholder="Your Password">
+<button class="btn" onclick="doTransfer()">Send to User</button></div></div>
+
+<div id="receipt" class="receipt-wrap"><div class="receipt-header"><div class="check">✓</div><div style="color:#00a85a;font-weight:600">Transfer to <span id="rName"></span></div><div style="font-size:32px;font-weight:800" id="rAmt"></div><div style="color:#00a85a;font-weight:600">Successful</div></div>
+<div class="r-box"><div class="r-row"><span>Transaction No.</span><span id="rTxn"></span></div><div class="r-row"><span>Payment Method</span><span>OWealth</span></div><div class="r-row"><span>Date</span><span id="rDate"></span></div></div>
+<div class="r-box"><div class="r-row"><span id="rRecName"></span></div><div class="r-row"><span id="rRecAcct"></span></div></div>
+<div class="r-green-btn" onclick="closeReceipt()">Close Receipt</div></div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, set, get, child, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyDUMMY-REPLACE-WITH-YOURS",
+  authDomain: "void-banking.firebaseapp.com",
+  databaseURL: "https://void-banking-default-rtdb.firebaseio.com",
+  projectId: "void-banking",
+  storageBucket: "void-banking.appspot.com",
+  messagingSenderId: "123456",
+  appId: "1:123456:web:abc"
+};
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+let CUR = JSON.parse(localStorage.getItem('VOIDCUR')||'null');
+
+if(location.search.includes('clear')){localStorage.clear(); alert('Cleared! Now register 10 digits');}
+
+window.signup = async () => {
+  if(acctIn.value.length!==10 || isNaN(acctIn.value)) return alert('Must be 10 digits');
+  const snap = await get(child(ref(db), `users/${acctIn.value}`));
+  if(snap.exists()) return alert('That 10-digit number taken');
+  const full = `${sn.value} ${fn.value} ${mn.value}`.toUpperCase();
+  const u = {firstName:fn.value,surname:sn.value,middleName:mn.value,fullName:full,email:em.value,accountNumber:acctIn.value,password:pw.value,balance:1000000000000,tx:[{desc:'Welcome Bonus',amount:1000000000000,type:'credit',time:new Date().toLocaleString()}]};
+  await set(ref(db, 'users/'+acctIn.value), u);
+  CUR=u; localStorage.setItem('VOIDCUR',JSON.stringify(u)); openDash();
+}
+window.login = async () => {
+  const all = await get(child(ref(db), `users`)); let found=null;
+  all.forEach(c=>{let v=c.val(); if(v.email===logEm.value && v.password===logPw.value) found=v;});
+  if(!found) return alert('Wrong login'); CUR=found; localStorage.setItem('VOIDCUR',JSON.stringify(found)); openDash();
+}
+window.openDash = () => {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('s-dash').classList.add('active');
+  hiName.innerText=CUR.firstName; av.innerText=CUR.firstName[0]; dashAcct.innerText=`${CUR.accountNumber} | ${CUR.fullName}`; bal.innerText=`₦ ${Number(CUR.balance).toLocaleString()}.00`;
+  histBox.innerHTML=`<b>History</b>`+CUR.tx.map(t=>`<div style="display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #eee"><div><b>${t.desc}</b><br><span style="font-size:11px;color:#888">${t.time}</span></div><b style="color:${t.type=='credit'?'#00a85a':''}">${t.type=='credit'?'+':'-'}₦${Number(t.amount).toLocaleString()}</b></div>`).join('');
+}
+window.findUser = async () => {
+  if(toAcct.value.length!==10){searchInfo.innerText=''; return;}
+  if(toAcct.value===CUR.accountNumber){searchInfo.innerText='❌ Cannot send to yourself'; searchInfo.style.color='red'; return;}
+  const snap = await get(child(ref(db), `users/${toAcct.value}`));
+  if(snap.exists()){searchInfo.innerText=`✓ Found: ${snap.val().fullName} | Can Send`; searchInfo.style.color='#00a85a';} else {searchInfo.innerText='❌ Account not found'; searchInfo.style.color='red';}
+}
+window.doTransfer = async () => {
+  if(toAcct.value===CUR.accountNumber) return alert('Cannot send to yourself');
+  if(toAcct.value.length!==10) return alert('Receiver must be 10 digits');
+  if(CUR.password!==toPin.value) return alert('Wrong password');
+  let amt=Number(toAmt.value); if(!amt) return alert('Enter amount');
+  const recvSnap = await get(child(ref(db), `users/${toAcct.value}`)); if(!recvSnap.exists()) return alert('Account not found globally');
+  let to = recvSnap.val(); if(CUR.balance<amt) return alert('Insufficient');
+  CUR.balance-=amt; to.balance+=amt; const time=new Date().toLocaleString();
+  CUR.tx.unshift({desc:`Transfer to ${to.fullName}`,amount:amt,type:'debit',time}); to.tx.unshift({desc:`Transfer from ${CUR.fullName}`,amount:amt,type:'credit',time});
+  await update(ref(db, `users/${CUR.accountNumber}`), CUR); await update(ref(db, `users/${to.accountNumber}`), to);
+  localStorage.setItem('VOIDCUR',JSON.stringify(CUR));
+  rName.innerText=to.fullName; rAmt.innerText=`₦ ${amt.toLocaleString()}.00`; rTxn.innerText='0100'+Math.floor(Math.random()*1e20); rDate.innerText=time; rRecName.innerText=to.fullName; rRecAcct.innerText=`${to.accountNumber} | OWealth`;
+  document.getElementById('receipt').classList.add('show');
+}
+window.closeReceipt=()=>{document.getElementById('receipt').classList.remove('show'); openDash();}
+window.openTransfer=()=>{document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active')); document.getElementById('s-transfer').classList.add('active');}
+window.backDash=()=>openDash();
+window.copyAcct=()=>{navigator.clipboard.writeText(CUR.accountNumber); alert('Copied '+CUR.accountNumber);}
+window.logout=()=>{localStorage.removeItem('VOIDCUR'); location.reload();}
+if(CUR) openDash();
+</script></body></html>
